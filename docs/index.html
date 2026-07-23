@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Decay Prediction & Action Playbook</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
+        h1, h2, h3 { color: #1a252f; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .abstract { background: #f8f9fa; border-left: 4px solid #2b5c8f; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        img { max-width: 100%; height: auto; margin: 15px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; }
+    </style>
+</head>
+<body>
+
+    <h1>Content Decay Prediction & Action Playbook</h1>
+    <p><em>Author: Faiza Malick | Machine Learning Capstone Research Paper</em></p>
+
+    <div class="abstract">
+        <h3>Abstract</h3>
+        <p>This research addresses the problem of identifying decaying high-value search content to optimize editorial refresh workflows. Using historical Google Search Console performance metrics from March 2026, we framed the task as a supervised binary classification problem to predict click cannibalization and traffic drop risks. A Random Forest model was evaluated against a heuristic baseline using a strict grouped-client validation split to prevent domain memorization and data leakage. The resulting model achieved robust predictive power, enabling automated queue generation for content refreshes. This deployment serves as a public-safe decision-support pipeline for prioritizing high-impact content updates.</p>
+    </div>
+
+    <h2>1. Introduction & Problem Statement</h2>
+    <p>Managing large-scale web domains requires continuous content updates. However, manual audits across thousands of URLs are impractical. Simple time-based rules (e.g., "update pages older than 6 months") lead to wasted editorial hours on high-performing pages while missing critical traffic decays. We combine impressions, clicks, CTR, and average position signals into a supervised machine learning model that predicts content decay, allowing editors to focus on high-risk pages first.</p>
+
+    <h2>2. Data</h2>
+    <p><strong>Release:</strong> March 2026 daily performance snapshot sourced from the FlyRank Open ML Internship Warehouse.</p>
+    <p><strong>Fields Extracted:</strong> <code>content_hash_id</code>, <code>client_hash_id</code>, <code>gsc_impressions</code>, <code>gsc_clicks</code>, <code>gsc_avg_position</code>, and calculated <code>ctr</code>.</p>
+
+    <h2>3. Methodology</h2>
+    <p><strong>Label Definition:</strong> <code>target_decay = 1</code> if <code>gsc_impressions &gt; 100</code> and <code>gsc_clicks == 0</code>, otherwise 0.</p>
+    <p><strong>Validation Design:</strong> 80/20 Grouped Client Split by <code>client_hash_id</code> to guarantee zero leakage between training and validation client domains.</p>
+
+    <h2>4. Results (vs. Baseline)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Model / Strategy</th>
+                <th>Validation Design</th>
+                <th>Accuracy</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>F1-Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Week-4 Baseline Heuristic</td>
+                <td>Grouped Client Split</td>
+                <td>0.891</td>
+                <td>0.026</td>
+                <td>0.00004</td>
+                <td>0.00008</td>
+            </tr>
+            <tr>
+                <td>Random Forest (Naive Split)</td>
+                <td>Naive Random Split</td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>1.000</td>
+            </tr>
+            <tr>
+                <td>Random Forest (Honest Grouped)</td>
+                <td>Grouped Client Split</td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>1.000</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Embedded Visualizations</h3>
+    <p><strong>Precision-Recall Curve:</strong></p>
+    <img src="../figures/pr_curve.png" alt="Precision Recall Curve">
+
+    <p><strong>Action Queue Distribution:</strong></p>
+    <img src="../figures/reason_code_distribution.png" alt="Action Queue Distribution">
+
+    <h2>5. Limitations & Honest Framing</h2>
+    <ul>
+        <li><strong>Observational Scope:</strong> Predicts directional decay risk, not deterministic traffic guarantees.</li>
+        <li><strong>SERP Layout Blind Spots:</strong> External SERP shifts (e.g., AI Overviews) cannot be fully isolated via GSC logs alone.</li>
+        <li><strong>Decision-Support Only:</strong> Strictly designed for editorial queue prioritization; no automated deletions or publishing without human review.</li>
+    </ul>
+
+    <h2>6. Ranked Recommendations (Action Playbook)</h2>
+    <ol>
+        <li><strong>Review Top Queue:</strong> Content teams should evaluate the top URLs sorted by baseline/decay score weekly.</li>
+        <li><strong>Execute Archetypes:</strong>
+            <ul>
+                <li><code>REFRESH_CONTENT (ZERO_CLICK_HIGH_IMPRESSIONS)</code>: Optimize titles and snippets for high-impression, zero-click pages.</li>
+                <li><code>REFRESH_CONTENT (LOW_CTR_RISK)</code>: Rewrite meta descriptions for low-CTR mid-ranking pages.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h2>7. Reproducibility & Artifacts</h2>
+    <p>All pipeline code, notebooks, and outputs are reproducible via the repository:</p>
+    <ul>
+        <li><code>work/notebooks/capstone.ipynb</code></li>
+        <li><code>work/outputs/action_playbook_queue.csv</code></li>
+        <li><code>work/outputs/playbook_metrics.json</code></li>
+    </ul>
+
+    <div class="footer">
+        <p><strong>Acknowledgments & Data Credit:</strong> Built on the <a href="https://flyrank.ai" target="_blank">FlyRank ML Internship dataset</a>.</p>
+    </div>
+
+</body>
+</html>
